@@ -18,11 +18,6 @@ var vertexNormalAttribute;
 var textureCoordAttribute;
 var perspectiveMatrix;
 
-
-var wasp_world_positions = [];
-var wasp_world_normals = [];
-var wasp_vertex_indices = [];
-
 //
 // start
 //
@@ -40,8 +35,6 @@ function start() {
     gl.clearDepth(1.0);                 // Clear everything
     gl.enable(gl.DEPTH_TEST);           // Enable depth testing
     gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-    initAnimationData();
     
     // Initialize the shaders; this is where all the lighting for the
     // vertices and so forth is established.
@@ -62,25 +55,15 @@ function start() {
     // Set up to draw the scene periodically.
     
     setInterval(drawScene, 15);
-  }
-}
 
-function initAnimationData () {
     ReadData();
-    CalcModelMatrix(0, Matrix.I(4));
+    CalcWorldMatrix(0, Matrix.I(4));
 
-    for (var idx = 0; idx < g_skin_vertices.length; ++idx)
+    //for (int idx = 0; idx < g_skin_vertices.length; ++idx)
     {
-        var world_position = CalcWorldPosition(idx);
-        wasp_world_positions.push(world_position.e(1));
-        wasp_world_positions.push(world_position.e(2));
-        wasp_world_positions.push(world_position.e(3));
-
-        var world_normal = CalcWorldNormal(idx);
-        wasp_world_normals.push(world_normal.e(1));
-        wasp_world_normals.push(world_normal.e(2));
-        wasp_world_normals.push(world_normal.e(3));
+        CalcWorldPosition(55, Matrix.I(4));
     }
+  }
 }
 
 //
@@ -122,19 +105,138 @@ function initBuffers() {
   
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesBuffer);
   
+  // Now create an array of vertices for the cube.
+  
+  var vertices = [
+    // Front face
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    
+    // Back face
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0, -1.0, -1.0,
+    
+    // Top face
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0, -1.0,
+    
+    // Bottom face
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0,  1.0,
+    -1.0, -1.0,  1.0,
+    
+    // Right face
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+    
+    // Left face
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0
+  ];
+  
   // Now pass the list of vertices into WebGL to build the shape. We
   // do this by creating a Float32Array from the JavaScript array,
   // then use it to fill the current vertex buffer.
   
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_positions), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
   // Set up the normals for the vertices, so that we can compute lighting.
   
   cubeVerticesNormalBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesNormalBuffer);
   
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_normals), gl.STATIC_DRAW);
+  var vertexNormals = [
+    // Front
+     0.0,  0.0,  1.0,
+     0.0,  0.0,  1.0,
+     0.0,  0.0,  1.0,
+     0.0,  0.0,  1.0,
+    
+    // Back
+     0.0,  0.0, -1.0,
+     0.0,  0.0, -1.0,
+     0.0,  0.0, -1.0,
+     0.0,  0.0, -1.0,
+    
+    // Top
+     0.0,  1.0,  0.0,
+     0.0,  1.0,  0.0,
+     0.0,  1.0,  0.0,
+     0.0,  1.0,  0.0,
+    
+    // Bottom
+     0.0, -1.0,  0.0,
+     0.0, -1.0,  0.0,
+     0.0, -1.0,  0.0,
+     0.0, -1.0,  0.0,
+    
+    // Right
+     1.0,  0.0,  0.0,
+     1.0,  0.0,  0.0,
+     1.0,  0.0,  0.0,
+     1.0,  0.0,  0.0,
+    
+    // Left
+    -1.0,  0.0,  0.0,
+    -1.0,  0.0,  0.0,
+    -1.0,  0.0,  0.0,
+    -1.0,  0.0,  0.0
+  ];
   
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals),
+                gl.STATIC_DRAW);
+  
+  // Map the texture onto the cube's faces.
+  
+  cubeVerticesTextureCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesTextureCoordBuffer);
+  
+  var textureCoordinates = [
+    // Front
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+    // Back
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+    // Top
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+    // Bottom
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+    // Right
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+    // Left
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0
+  ];
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
+                gl.STATIC_DRAW);
 
   // Build the element array buffer; this specifies the indices
   // into the vertex array for each face's vertices.
@@ -145,19 +247,20 @@ function initBuffers() {
   // This array defines each face as two triangles, using the
   // indices into the vertex array to specify each triangle's
   // position.
-
-  var num_of_triangles = g_skin_triangle_list.length;
-  for (var triangle_idx = 0; triangle_idx < num_of_triangles; ++triangle_idx)
-  {
-        wasp_vertex_indices.push(g_skin_triangle_list[triangle_idx][0]);
-        wasp_vertex_indices.push(g_skin_triangle_list[triangle_idx][1]);
-        wasp_vertex_indices.push(g_skin_triangle_list[triangle_idx][2]);
-  }
+  
+  var cubeVertexIndices = [
+    0,  1,  2,      0,  2,  3,    // front
+    4,  5,  6,      4,  6,  7,    // back
+    8,  9,  10,     8,  10, 11,   // top
+    12, 13, 14,     12, 14, 15,   // bottom
+    16, 17, 18,     16, 18, 19,   // right
+    20, 21, 22,     20, 22, 23    // left
+  ]
   
   // Now send the element array to GL
   
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-      new Uint16Array(wasp_vertex_indices), gl.STATIC_DRAW);
+      new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
 }
 
 //
@@ -253,8 +356,8 @@ function drawScene() {
   
   // Set the texture coordinates attribute for the vertices.
   
-  //gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesTextureCoordBuffer);
-  //gl.vertexAttribPointer(textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesTextureCoordBuffer);
+  gl.vertexAttribPointer(textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
   
   // Bind the normals buffer to the shader attribute.
   
@@ -263,16 +366,15 @@ function drawScene() {
   
   // Specify the texture to map onto the faces.
   
-  //gl.activeTexture(gl.TEXTURE0);
-  //gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
-  //gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
   
   // Draw the cube.
   
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVerticesIndexBuffer);
   setMatrixUniforms();
-  //gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
-  gl.drawElements(gl.TRIANGLES, wasp_vertex_indices.length, gl.UNSIGNED_SHORT, 0);
+  gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
   
   // Restore the original matrix
   
@@ -317,8 +419,8 @@ function initShaders() {
   vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
   gl.enableVertexAttribArray(vertexPositionAttribute);
   
-  //textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
-  //gl.enableVertexAttribArray(textureCoordAttribute);
+  textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+  gl.enableVertexAttribArray(textureCoordAttribute);
   
   vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
   gl.enableVertexAttribArray(vertexNormalAttribute);

@@ -12,7 +12,7 @@ var g_BONE_ROT_X_LIMIT = 7;
 var g_BONE_ROT_Y_LIMIT = 8;
 var g_BONE_ROT_Z_LIMIT = 9;
 var g_BONE_BINDING_MTX = 10;
-var g_BONE_WORLD_MTX = 11;
+var g_BONE_MODEL_MTX = 11;
 
 var g_bones = [];
 
@@ -46,6 +46,17 @@ function ReadData ()
                 async:  false,
                 success:function(result) {
                                 ParseSkinData(result);
+                        },
+                error:  function (x, status, error) {
+                                alert(status + ": " + error);
+                        },
+        });
+
+        jQuery.ajax({
+                url:    "wasp_walk.anim",
+                async:  false,
+                success:function(result) {
+                                ParseAnimData(result);
                         },
                 error:  function (x, status, error) {
                                 alert(status + ": " + error);
@@ -309,4 +320,9 @@ function ParseSkinData (skin_data)
                         }
                 }
         }
+}
+
+function ParseAnimData (anim_data)
+{
+
 }

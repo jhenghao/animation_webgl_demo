@@ -14,15 +14,16 @@
    <!-- Fragment shader program -->
 
     <script id="shader-fs" type="x-shader/x-fragment">
-      varying highp vec2 vTextureCoord;
+      //varying highp vec2 vTextureCoord;
       varying highp vec3 vLighting;
       
       uniform sampler2D uSampler;
       
       void main(void) {
-        highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        //highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
         
-        gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+        //gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+        gl_FragColor = vec4(vLighting, 1);
       }
     </script>
     
@@ -31,18 +32,18 @@
     <script id="shader-vs" type="x-shader/x-vertex">
       attribute highp vec3 aVertexNormal;
       attribute highp vec3 aVertexPosition;
-      attribute highp vec2 aTextureCoord;
+      //attribute highp vec2 aTextureCoord;
     
       uniform highp mat4 uNormalMatrix;
       uniform highp mat4 uMVMatrix;
       uniform highp mat4 uPMatrix;
       
-      varying highp vec2 vTextureCoord;
+      //varying highp vec2 vTextureCoord;
       varying highp vec3 vLighting;
     
       void main(void) {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-        vTextureCoord = aTextureCoord;
+        //vTextureCoord = aTextureCoord;
         
         // Apply lighting effect
         
