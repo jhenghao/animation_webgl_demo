@@ -5,8 +5,9 @@ var cubeVerticesBuffer;
 var cubeVerticesTextureCoordBuffer;
 var cubeVerticesIndexBuffer;
 var cubeVerticesIndexBuffer;
-var cubeRotation = 0.0;
-var lastCubeUpdateTime = 0;
+
+var last_update_time = 0.0;
+var total_time = 0.0;
 
 var cubeImage;
 var cubeTexture;
@@ -81,6 +82,21 @@ function initAnimationData () {
         wasp_world_normals.push(world_normal.e(2));
         wasp_world_normals.push(world_normal.e(3));
     }
+
+    PrecomputeKeyframeCoefficients();
+/*
+    var num_of_channels = g_anim_channels.length;
+    for (var idx = 41; idx < 42; ++idx)
+    {
+        console.log("##### idx: " + idx);
+        var t = 0.0;
+        while (t < 4)
+        {
+                console.log(ChannelEvaluate(t, idx));
+                t += 0.1;
+        }
+    }
+*/
 }
 
 //
@@ -126,14 +142,14 @@ function initBuffers() {
   // do this by creating a Float32Array from the JavaScript array,
   // then use it to fill the current vertex buffer.
   
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_positions), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_positions), gl.DYNAMIC_DRAW);
 
   // Set up the normals for the vertices, so that we can compute lighting.
   
   cubeVerticesNormalBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesNormalBuffer);
   
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_normals), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_normals), gl.DYNAMIC_DRAW);
   
 
   // Build the element array buffer; this specifies the indices
@@ -219,6 +235,17 @@ function handleTextureLoaded(image, texture) {
 // Draw the scene.
 //
 function drawScene() {
+
+        var current_time = (new Date).getTime();
+        if (last_update_time) 
+        {
+                var delta = current_time - last_update_time;
+                total_time += delta / 1000;
+                UpdateAnimation(total_time);
+        }
+  
+        last_update_time = current_time;
+
   // Clear the canvas before we start drawing on it.
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -238,17 +265,18 @@ function drawScene() {
   // Now move the drawing position a bit to where we want to start
   // drawing the cube.
   
-  mvTranslate([0.0, 0.0, -6.0]);
+  mvTranslate([0.0, 0.0, -10.0]);
   
   // Save the current matrix, then rotate before we draw.
   
   mvPushMatrix();
-  mvRotate(cubeRotation, [1, 0, 1]);
+  mvRotate(90, [0, 1, 0]);
   
   // Draw the cube by binding the array buffer to the cube's vertices
   // array, setting attributes, and pushing it to GL.
   
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_positions), gl.DYNAMIC_DRAW);
   gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
   
   // Set the texture coordinates attribute for the vertices.
@@ -259,6 +287,7 @@ function drawScene() {
   // Bind the normals buffer to the shader attribute.
   
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVerticesNormalBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wasp_world_normals), gl.DYNAMIC_DRAW);
   gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
   
   // Specify the texture to map onto the faces.
@@ -280,14 +309,6 @@ function drawScene() {
   
   // Update the rotation for the next draw, if it's time to do so.
   
-  var currentTime = (new Date).getTime();
-  if (lastCubeUpdateTime) {
-    var delta = currentTime - lastCubeUpdateTime;
-    
-    cubeRotation += (30 * delta) / 1000.0;
-  }
-  
-  lastCubeUpdateTime = currentTime;
 }
 
 //

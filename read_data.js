@@ -27,6 +27,34 @@ var g_WEIGHT_VALUE = 1;
 var g_skin_vertices = [];
 var g_skin_triangle_list = [];
 
+// wasp_walk.anim
+var g_CHANNEL_EXTRAP_IN = 0;
+var g_CHANNEL_EXTRAP_OUT = 1;
+var g_CHANNEL_KEYFRAMES = 2;
+
+var g_KEYFRAME_TIME = 0;
+var g_KEYFRAME_VALUE = 1;
+var g_KEYFRAME_TANGENT_IN_TYPE = 2;
+var g_KEYFRAME_TANGENT_IN_VALUE = 3;
+var g_KEYFRAME_TANGENT_OUT_TYPE = 4;
+var g_KEYFRAME_TANGENT_OUT_VALUE = 5;
+var g_KEYFRAME_COEFF_A = 6;
+var g_KEYFRAME_COEFF_B = 7;
+var g_KEYFRAME_COEFF_C = 8;
+var g_KEYFRAME_COEFF_D = 9;
+
+var g_TANGENT_TYPE_FLAT = 0;
+var g_TANGENT_TYPE_LINEAR = 1;
+var g_TANGENT_TYPE_SMOOTH = 2;
+
+var g_EXTRAP_TYPE_CONSTANT = 0;
+var g_EXTRAP_TYPE_LINEAR = 1;
+var g_EXTRAP_TYPE_CYCLE = 2;
+var g_EXTRAP_TYPE_CYCLE_OFFSET = 3;
+var g_EXTRAP_TYPE_BOUNCE = 4;
+
+var g_anim_channels= [];
+
 function ReadData ()
 {
 
@@ -62,7 +90,6 @@ function ReadData ()
                                 alert(status + ": " + error);
                         },
         });
-        alert("here");
 }
 
 function ParseSkelData (skel_data)
@@ -324,5 +351,97 @@ function ParseSkinData (skin_data)
 
 function ParseAnimData (anim_data)
 {
+        var ChannelTag = "channel";
+        var ExtrapolateTag = "extrapolate";
+        var KeyTag = "key";
 
+        var lines = anim_data.split("\n");
+        var num_of_lines = lines.length;
+        var line_idx = 3;
+
+        while (line_idx < num_of_lines)
+        {
+                var line = lines[line_idx];
+                ++line_idx;
+
+                if (line.indexOf(ChannelTag) == -1)
+                {
+                        continue;
+                }
+
+                line = lines[line_idx];
+                ++line_idx;
+
+                var tokens = line.split(/ +/);
+                var extrap_in = GetExtrapType(tokens[2]);
+                var extrap_out = GetExtrapType(tokens[3]);
+
+                g_anim_channels.push([extrap_in, extrap_out, []]);
+
+                line = lines[line_idx];
+                ++line_idx;
+
+                tokens = line.split(/ +/);
+                var num_of_keyframes = parseInt(tokens[2]);
+
+                for (var keyframe_idx = 0; keyframe_idx < num_of_keyframes; ++keyframe_idx)
+                {
+                        line = lines[line_idx];
+                        ++line_idx;
+
+                        tokens = line.split(/ +/);
+                        var time = parseFloat(tokens[1]);
+                        var value = parseFloat(tokens[2]);
+                        var tangent_in_type = GetTangentType(tokens[3]);
+                        var tangent_out_type = GetTangentType(tokens[4]);
+
+                        var keyframe = {};
+                        keyframe[g_KEYFRAME_TIME] = time; 
+                        keyframe[g_KEYFRAME_VALUE] = value; 
+                        keyframe[g_KEYFRAME_TANGENT_IN_TYPE] = tangent_in_type;
+                        keyframe[g_KEYFRAME_TANGENT_OUT_TYPE] = tangent_out_type;
+
+                        g_anim_channels[g_anim_channels.length - 1][g_CHANNEL_KEYFRAMES].push(keyframe);
+                }
+        }
+}
+
+function GetExtrapType (token)
+{
+        if (token.indexOf("constant") != -1)
+        {
+                return g_EXTRAP_TYPE_CONSTANT;
+        }
+        else if (token.indexOf("cycle_offset") != -1)
+        {
+                return g_EXTRAP_TYPE_CYCLE_OFFSET;
+        }
+        else if (token.indexOf("cycle") != -1)
+        {
+                return g_EXTRAP_TYPE_CYCLE;
+        }
+        else
+        {
+                alert("unhandled extrapolation type: " + token);
+        }
+}
+
+function GetTangentType (token)
+{
+        if (token.indexOf("smooth") != -1)
+        {
+                return g_TANGENT_TYPE_SMOOTH;
+        }
+        else if (token.indexOf("flat") != -1)
+        {
+                return g_TANGENT_TYPE_FLAT;
+        }
+        else if (token.indexOf("linear") != -1)
+        {
+                return g_TANGENT_TYPE_LINEAR;
+        }
+        else
+        {
+                alert("unhandled tangent type: " + token);
+        }
 }
