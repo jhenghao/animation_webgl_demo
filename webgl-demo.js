@@ -24,6 +24,11 @@ var wasp_world_positions = [];
 var wasp_world_normals = [];
 var wasp_vertex_indices = [];
 
+var g_eye = [-5, 10, 0];
+var g_center = [0, 0, 0];
+var g_up = [0, 1, 0];
+var g_view_matrix;
+
 //
 // start
 //
@@ -61,7 +66,14 @@ function start() {
     // TODO#2 End
 	
     // Set up to draw the scene periodically.
-    
+   
+    g_view_matrix = makeLookAt(
+        g_eye[0], g_eye[1], g_eye[2],
+        g_center[0], g_center[1], g_center[2],
+        g_up[0], g_up[1], g_up[2]
+    ); 
+
+
     setInterval(drawScene, 15);
   }
 }
@@ -84,19 +96,6 @@ function initAnimationData () {
     }
 
     PrecomputeKeyframeCoefficients();
-/*
-    var num_of_channels = g_anim_channels.length;
-    for (var idx = 41; idx < 42; ++idx)
-    {
-        console.log("##### idx: " + idx);
-        var t = 0.0;
-        while (t < 4)
-        {
-                console.log(ChannelEvaluate(t, idx));
-                t += 0.1;
-        }
-    }
-*/
 }
 
 //
@@ -265,12 +264,12 @@ function drawScene() {
   // Now move the drawing position a bit to where we want to start
   // drawing the cube.
   
-  mvTranslate([0.0, 0.0, -10.0]);
+  //mvTranslate([0.0, 0.0, -10.0]);
   
   // Save the current matrix, then rotate before we draw.
   
-  mvPushMatrix();
-  mvRotate(90, [0, 1, 0]);
+  mvPushMatrix(g_view_matrix);
+  //mvRotate(90, [0, 1, 0]);
   
   // Draw the cube by binding the array buffer to the cube's vertices
   // array, setting attributes, and pushing it to GL.
